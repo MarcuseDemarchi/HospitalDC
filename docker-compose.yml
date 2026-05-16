@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -15,9 +13,7 @@ services:
       - hospital_network
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: marcusedemarchi/hospitaldc:backend
     container_name: hospital_backend
     restart: always
     ports:
@@ -30,9 +26,7 @@ services:
       - hospital_network
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
+    image: marcusedemarchi/hospitaldc:frontend
     container_name: hospital_frontend
     restart: always
     ports:
