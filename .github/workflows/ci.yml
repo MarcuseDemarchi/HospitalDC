@@ -1,0 +1,93 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# ci.yml — Pipeline de Integração Contínua (CI)
+# Projeto: Hospital DC API | Disciplina: Cloud Computing - UNIDAVI
+# Aluno: Marcus De Marchi
+#
+# Este workflow é acionado automaticamente a cada push ou pull request
+# na branch main. Ele garante que o código submetido passa por todas as
+# etapas de qualidade antes de ser integrado ao repositório principal.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: CI - Hospital DC API
+
+# ── Gatilhos do workflow ──────────────────────────────────────────────────────
+# O pipeline é disparado em duas situações:
+#   1. push na branch main (quando código é enviado diretamente)
+#   2. pull_request para a branch main (quando uma PR é aberta/atualizada)
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# ── Definição dos jobs ────────────────────────────────────────────────────────
+jobs:
+
+  # ── Job principal: build, lint e testes ──────────────────────────────────
+  build-and-test:
+
+    # Sistema operacional do runner (máquina virtual do GitHub Actions)
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ── Passo 1: Checkout do código ─────────────────────────────────────
+      # Clona o repositório dentro do runner para que os passos seguintes
+      # possam acessar os arquivos do projeto.
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # ── Passo 2: Configuração do Python ─────────────────────────────────
+      # Instala e configura o Python 3.11 no runner.
+      # A versão é fixada para garantir reprodutibilidade entre execuções.
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── Passo 3: Instalação de dependências ─────────────────────────────
+      # Instala as bibliotecas listadas no requirements.txt da API.
+      # O parâmetro --upgrade garante que o pip esteja atualizado antes
+      # de instalar os pacotes do projeto.
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+
+      # ── Passo 4 (ETAPA ADICIONAL): Análise estática com flake8 (Lint) ───
+      # O flake8 verifica o código em busca de erros de sintaxe, variáveis
+      # não utilizadas e violações de estilo (PEP 8).
+      # Isso evita que código com problemas básicos seja integrado.
+      # Configuração:
+      #   --max-line-length=100  → permite linhas de até 100 caracteres
+      #   --exclude              → ignora pastas que não são código do projeto
+      - name: Lint com flake8
+        run: |
+          flake8 api/app.py api/tests/test_api.py \
+            --max-line-length=100 \
+            --exclude=.git,__pycache__
+
+      # ── Passo 5: Execução dos testes com cobertura ──────────────────────
+      # Roda todos os testes unitários usando pytest.
+      # O parâmetro --cov gera um relatório de cobertura de código,
+      # mostrando qual percentual do código foi exercitado pelos testes.
+      # O relatório é exibido no terminal (--cov-report=term-missing)
+      # e também salvo como XML para integração com ferramentas externas.
+      - name: Executar testes e gerar cobertura
+        run: |
+          pytest api/tests/test_api.py \
+            --cov=api \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            -v
+
+      # ── Passo 6: Upload do relatório de cobertura como artefato ─────────
+      # Salva o arquivo coverage.xml como artefato da execução.
+      # Isso permite que relatórios de cobertura sejam consultados
+      # diretamente na interface do GitHub Actions por 7 dias.
+      - name: Publicar relatório de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7
