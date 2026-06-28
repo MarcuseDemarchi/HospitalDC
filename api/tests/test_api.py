@@ -27,30 +27,14 @@ from app import app  # noqa: E402
 # Cliente de teste do FastAPI (não sobe servidor real, simula requisições HTTP)
 client = TestClient(app)
 
-
-# ─────────────────────────────────────────────
-# TESTE 1: Retorno HTTP 200 em GET /pacientes
-# ─────────────────────────────────────────────
 def test_get_pacientes_retorna_200():
-    """
-    Verifica que a rota GET /pacientes retorna código HTTP 200 (OK).
-    Garante que o endpoint está acessível e responde corretamente.
-    """
     response = client.get("/pacientes")
     assert response.status_code == 200, (
         f"Esperado 200, recebido {response.status_code}"
     )
 
 
-# ─────────────────────────────────────────────
-# TESTE 2: Validação da estrutura do JSON
-# ─────────────────────────────────────────────
 def test_estrutura_json_pacientes():
-    """
-    Verifica que o JSON retornado por GET /pacientes contém os campos
-    obrigatórios: 'total' e 'pacientes', e que cada paciente possui
-    os campos: id, nome, idade, diagnostico, status e leito.
-    """
     response = client.get("/pacientes")
     dados = response.json()
 
@@ -68,15 +52,7 @@ def test_estrutura_json_pacientes():
                 f"Campo obrigatório '{campo}' ausente no paciente: {paciente}"
             )
 
-
-# ─────────────────────────────────────────────
-# TESTE 3: HTTP 404 para ID inexistente
-# ─────────────────────────────────────────────
 def test_paciente_inexistente_404():
-    """
-    Verifica que a rota GET /pacientes/{id} retorna código HTTP 404
-    quando um ID que não existe no sistema é consultado.
-    """
     response = client.get("/pacientes/9999")
     assert response.status_code == 404, (
         f"Esperado 404 para ID inexistente, recebido {response.status_code}"
@@ -85,21 +61,7 @@ def test_paciente_inexistente_404():
     dados = response.json()
     assert "erro" in dados, "Resposta 404 deve conter campo 'erro'"
 
-
-# ─────────────────────────────────────────────
-# TESTE 4 (Autoria própria): Mínimo de 10 registros
-# ─────────────────────────────────────────────
 def test_total_pacientes_minimo_dez():
-    """
-    Verifica que a API retorna ao mínimo 10 registros de pacientes,
-    conforme exigido pelo requisito acadêmico do trabalho.
-
-    Justificativa: Este teste automatiza a verificação de integridade dos dados
-    simulados. Em pipelines CI/CD reais, testes assim evitam deploys com
-    arquivos de dados corrompidos, incompletos ou truncados acidentalmente.
-    O campo 'total' também é validado para garantir consistência entre o
-    contador declarado e a lista real retornada.
-    """
     response = client.get("/pacientes")
     dados = response.json()
 
