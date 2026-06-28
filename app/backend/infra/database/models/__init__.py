@@ -1,1 +1,0 @@
-from .paciente import Paciente
