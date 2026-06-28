@@ -27,6 +27,7 @@ from app import app  # noqa: E402
 # Cliente de teste do FastAPI (não sobe servidor real, simula requisições HTTP)
 client = TestClient(app)
 
+
 def test_get_pacientes_retorna_200():
     response = client.get("/pacientes")
     assert response.status_code == 200, (
@@ -52,6 +53,7 @@ def test_estrutura_json_pacientes():
                 f"Campo obrigatório '{campo}' ausente no paciente: {paciente}"
             )
 
+
 def test_paciente_inexistente_404():
     response = client.get("/pacientes/9999")
     assert response.status_code == 404, (
@@ -60,6 +62,7 @@ def test_paciente_inexistente_404():
 
     dados = response.json()
     assert "erro" in dados, "Resposta 404 deve conter campo 'erro'"
+
 
 def test_total_pacientes_minimo_dez():
     response = client.get("/pacientes")
