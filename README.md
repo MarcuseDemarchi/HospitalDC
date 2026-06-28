@@ -1,92 +1,114 @@
-# Sistema de Gestão Hospitalar - Hospital DC
+# Sistema de Gestão Hospitalar — Hospital DC
 
-Este projeto foi desenvolvido como o **Trabalho 02** da disciplina de Desenvolvimento de Sistemas. O objetivo é fornecer uma solução funcional de triagem para um pequeno hospital, utilizando tecnologias modernas de desenvolvimento Web e Cloud (Docker).
+Este repositório contém o sistema completo do **Hospital DC**, desenvolvido ao longo da disciplina de Cloud Computing da UNIDAVI.
+
+- **Trabalho 02:** Sistema de triagem com Docker, FastAPI e React (pasta `app/`)
+- **Trabalho Final:** API REST com testes unitários e pipeline CI/CD (pasta `api/`)
 
 ---
 
-## Guia de Início Rápido (Do Zero)
+## Trabalho Final — API REST com CI/CD
 
-Siga os passos abaixo para configurar e rodar o projeto em um computador que não possui as ferramentas instaladas.
+### Sobre a API
 
-### 1. Pré-requisitos
-Antes de começar, você precisará instalar duas ferramentas fundamentais:
-- **Git:** Para baixar o código do projeto. [Baixe aqui](https://git-scm.com/downloads).
-- **Docker Desktop:** Para rodar os containers (inclui o Docker Compose). [Baixe aqui](https://www.docker.com/products/docker-desktop/).
+A API simula um serviço de consulta de pacientes internados, com dados armazenados em arquivo JSON externo. Foi construída com **Python + FastAPI** e possui pipeline de Integração Contínua configurado via **GitHub Actions**.
 
-> **Nota para Windows/Mac:** Após instalar o Docker Desktop, certifique-se de que ele está aberto e rodando (ícone da baleia na barra de tarefas).
+### Rotas disponíveis
 
-### 2. Clonando o Projeto
-Abra o seu terminal (CMD, PowerShell ou Terminal do Linux) e execute:
-```
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/status` | Health check da aplicação |
+| GET | `/pacientes` | Lista todos os pacientes |
+| GET | `/pacientes/{id}` | Retorna um paciente pelo ID |
+
+---
+
+## Como executar localmente
+
+### Pré-requisitos
+
+- Python 3.11+
+- pip
+
+### Sem container (direto no Python)
+
+```bash
+# Clone o repositório
 git clone https://github.com/MarcuseDemarchi/HospitalDC.git
 cd HospitalDC
+
+# Instale as dependências
+pip install -r api/requirements.txt
+
+# Execute a API
+uvicorn api.app:app --reload --port 8080
 ```
 
-### 3. Executando o Sistema (Via Docker Hub)
-Este projeto já possui imagens pré-construídas e hospedadas no **Docker Hub**. Isso permite que você rode o sistema completo sem precisar compilar o código localmente.
+Acesse em: http://localhost:8080
 
-No terminal, dentro da pasta do projeto, execute:
-```
+Documentação Swagger: http://localhost:8080/docs
+
+### Com Docker (sistema completo do Trabalho 02)
+
+```bash
 docker-compose up -d
 ```
 
-O Docker irá baixar automaticamente as seguintes imagens:
-- `marcusedemarchi/hospitaldc:backend` (API FastAPI)
-- `marcusedemarchi/hospitaldc:frontend` (Interface React)
-- `postgres:15` (Banco de Dados)
+- Frontend: http://localhost:3000
+- Backend completo: http://localhost:8000/docs
 
 ---
 
-## Como Acessar
+## Como executar os testes
 
-Após o comando acima finalizar, o sistema estará disponível em:
+```bash
+# Testes simples
+pytest api/tests/test_api.py -v
 
-- **Frontend (Interface do Usuário):** [http://localhost:3000](http://localhost:3000)
-- **Backend (Documentação Swagger/API):** [http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## Detalhes Técnicos para Validação
-
-Este projeto atende aos seguintes requisitos técnicos exigidos:
-
-### 1. Orquestração Multi-container
-Utilizamos o **Docker Compose** para gerenciar três serviços independentes:
-- **Banco de Dados (PostgreSQL):** Armazena os dados dos pacientes.
-- **Backend (Python/FastAPI):** Lógica de negócio e conexão com o banco via SQLAlchemy.
-- **Frontend (React):** Interface SPA consumindo a API.
-
-### 2. Persistência de Dados
-Configuramos um **Volume Nomeado** (`postgres_data`) no Docker. Isso garante que, mesmo que os containers sejam removidos ou o computador reiniciado, os dados dos pacientes permaneçam salvos no disco rígido do host.
-
-### 3. Redes (Networking)
-Os containers estão conectados através de uma rede interna chamada `hospital_network`. O backend comunica-se com o banco de dados usando o nome do serviço (`db`) em vez de IPs fixos, seguindo as melhores práticas de Docker.
-
-### 4. Variáveis de Ambiente
-As credenciais do banco de dados (usuário, senha e nome do banco) não estão "hardcoded" no código. Elas são definidas no `docker-compose.yml` e injetadas no backend via variáveis de ambiente (`DATABASE_URL`).
+# Testes com cobertura
+pytest api/tests/test_api.py --cov=api --cov-report=term-missing -v
+```
 
 ---
 
-## Estrutura do Repositório
+## Estrutura do repositório
+
 ```
 HospitalDC/
-├── app/
-│   ├── backend/        # Código Fonte Python (FastAPI)
-│   └── frontend/       # Código Fonte React (TypeScript/JS)
-├── Dockerfile.backend  # Instruções para criar a imagem do servidor
-├── Dockerfile.frontend # Instruções para criar a imagem da interface
-├── docker-compose.yml  # Orquestrador de todos os serviços
-├── GEMINI.md           # Contexto e regras do projeto
-└── evidencias/         # Prints de execução (conforme solicitado)
+├── api/                        # Trabalho Final — API REST
+│   ├── app.py                  # Código da API (FastAPI)
+│   ├── requirements.txt        # Dependências Python
+│   ├── data/
+│   │   └── pacientes.json      # Dados simulados (12 pacientes)
+│   └── tests/
+│       └── test_api.py         # 4 testes unitários
+├── app/                        # Trabalho 02 — Sistema completo
+│   ├── backend/                # FastAPI com PostgreSQL
+│   └── frontend/               # React
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # Pipeline GitHub Actions
+├── Dockerfile.backend
+├── Dockerfile.frontend
+├── docker-compose.yml
+└── README.md
 ```
 
-## Comandos Úteis
+---
 
-- **Parar o sistema:** `docker-compose stop`
-- **Remover os containers:** `docker-compose down`
-- **Limpar TUDO (inclusive os dados do banco):** `docker-compose down -v`
-- **Recompilar localmente (caso altere o código):** `docker-compose up --build`
+## CI/CD — GitHub Actions
+
+O pipeline é acionado automaticamente a cada `push` ou `pull request` na branch `main` e executa:
+
+1. Checkout do código
+2. Configuração do Python 3.11
+3. Instalação de dependências
+4. **Lint com flake8** (etapa adicional)
+5. Execução dos 4 testes unitários com pytest
+6. Geração e upload do relatório de cobertura
 
 ---
-**Desenvolvido por:** Marcus De Marchi
-**Disciplina:** Trabalho 02 - Faculdade
+
+**Desenvolvido por:** Marcus De Marchi  
+**Disciplina:** Cloud Computing — UNIDAVI  
+**Professor:** Prof. Esp. Ademar Perfoll Junior
